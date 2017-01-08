@@ -1,5 +1,10 @@
 import numpy as np, cv2, math, sys
 
+"""
+    This method find the best threshold for binarization of input image.
+    I.e. for a grayscale image, pixel >= threshold would be 255, or 0 otherwise. 
+    Assume that input is a two-dimensional list.
+"""
 def binaryThreshold(img):
     hist = [0 for i in range(256)]
     rows = len(img)
@@ -49,6 +54,11 @@ def binaryThreshold(img):
             result = T
     return result
 
+"""
+    This method is to do the binarization of an input image.
+    It utilizes the previous method to find the threshold.
+    Assumes that the input is a two-dimensional list.
+"""
 def binarization(img):
     res = list()
     threshold = binaryThreshold(img)
@@ -64,9 +74,19 @@ def binarization(img):
             res.append(line)
     return res, threshold
 
+"""
+    Helper method to determine whether a coordinate (x,y) is in
+    the bound of an image with width w and height h. If the coordinate
+    is in bound, return True.
+"""
 def inbound(x, y, w, h):
     return (x >= 0) and (x < w) and (y >= 0) and (y < h)
 
+"""
+    This method implements the erosion operation in binary image
+    morphology. It uses a circle kernel to do the erosion, whose
+    radius is the 2nd input parameter.
+"""
 def erode(src, radius):
     dst = list()
     rows = len(src)
@@ -96,6 +116,9 @@ def erode(src, radius):
         dst.append(dstline)
     return dst
 
+"""
+    Similar to erode method, but this one is implementation of dilation.
+"""
 def dilate(src, radius):
     dst = list()
     rows = len(src)
@@ -125,10 +148,18 @@ def dilate(src, radius):
         dst.append(dstline)
     return dst
 
+"""
+    Implemented open operation in binary image morphology. First do dilation
+    to the input image and then do erosion to the dilation result.
+    Can effectively reduce small noises in the image.
+"""
 def denoise(src, radius):
     #return dilate(erode(src,radius),radius)
     return erode(dilate(src,radius),radius)
 
+"""
+    Implemented simple downsample operation for image.
+"""
 def downsample(img, rate):
     rows = len(img)
     cols = len(img[0])
@@ -146,6 +177,9 @@ def downsample(img, rate):
         res.append(line)
     return res
 
+"""
+    Implemented Sobel operator.
+"""
 def Sobel(src):
     Ix = list()
     Iy = list()
@@ -161,6 +195,10 @@ def Sobel(src):
         Iy.append(yline)
     return Ix, Iy
 
+"""
+    Compute the magnitude and direction(in radius) of edges from Ix and Iy,
+    which is calculated by Sobel operator.
+"""
 def getEdge(Ix, Iy):
     magnitude = list()
     direction = list()
@@ -184,6 +222,9 @@ def getEdge(Ix, Iy):
         direction.append(dirline)
     return magnitude, direction
 
+"""
+    Given a direction of edge, classify the angel to 8 categories.
+"""
 def angelClassify(angel):
     #divide the -pi/2 to pi/2 range by 8, so have 8 regions
     #bound is: [[7/16*pi, -7/16*pi],[-7/16*pi, -5/16*pi],[-5/16*pi, -3/16*pi],[-3/16*pi, -1/16*pi],[-1/16*pi, 1/16*pi],[1/16*pi, 3/16*pi],[1/16*pi, 3/16*pi],[3/16*pi, 5/16*pi],[5/16*pi, 7/16*pi]]
@@ -207,6 +248,10 @@ def angelClassify(angel):
     else:
         return 0
 
+"""
+    Classify the image to various shapes according to the 
+    magnitude and direction of edges.
+"""
 def shapeClassify(magnitude, direction, mag_threshold):
     rows = len(magnitude)
     cols = len(magnitude[0])
@@ -246,7 +291,10 @@ def shapeClassify(magnitude, direction, mag_threshold):
     elif triangleNum == 3:
         return 'triangle'
 
-#assume the input src is denoised matrix represented as list
+"""
+    Classify circles and ellipes.
+    Assume the input src is denoised matrix represented as list.
+"""
 def isCircle(src):
     rows = len(src)
     cols = len(src[0])
@@ -276,6 +324,9 @@ def isCircle(src):
     else:
         return 'ellipse'
 
+"""
+    Below is main method.
+"""
 debug = False
 if (len(sys.argv) == 2) and sys.argv[1] == 'debug':
     debug = True
